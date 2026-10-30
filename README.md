@@ -5,6 +5,7 @@ Exam prep for every module, built the way we prepared for CSE302 Computer System
 - **Plan**: what's most likely to come out (ranked from past papers and the lecturer's revision session), a predicted paper, a study plan and answering rules.
 - **Learn**: model answers written as mark points, with read-aloud.
 - **Drill**: multiple choice. A wrong answer is explained out loud: why your pick was wrong, what's right, and how to avoid the trap. Missed questions come back.
+- **Speed test**: quick rounds of 10, 20 or 30 tap-to-answer questions for on the go, with an optional timer. Right answers move on by themselves, wrong ones explain why, and you get a score and a retry of your misses at the end.
 - **Exam mode**: write your answer under a timer, then tick off the mark scheme or let Claude mark it.
 - **Tools**: module-specific extras. CSA has a **Subnet lab** (unlimited /16 VLSM problems with worked solutions).
 

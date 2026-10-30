@@ -222,3 +222,18 @@ summary{cursor:pointer;font-weight:700}
 .hub-card{text-decoration:none;color:var(--ink)}
 .hub-card:hover{border-color:var(--accent)}
 .hub-card .code{font-family:var(--font-mono);font-size:.85rem;color:var(--accent);font-weight:600}
+
+/* speed test */
+.sp-opts{display:flex;gap:18px;flex-wrap:wrap}
+.sp-head{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.sp-timer{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.sp-timer i{display:block;height:100%;width:100%;background:var(--accent);transition:width .1s linear}
+.sp-timer i.low{background:var(--bad)}
+.sp-q{font-size:1.15rem}
+.sp-opt{min-height:56px;font-size:1.04rem;align-items:center}
+.sp-auto{height:4px;background:var(--surface);border-radius:2px;overflow:hidden}
+.sp-auto i{display:block;height:100%;width:0;background:var(--good);transition:width 1.6s linear}
+.sp-miss li{display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion: reduce){.sp-timer i,.sp-auto i{transition:none}}
+@media (max-width:520px){.sp-opt{padding:14px 12px}}
+@media (max-width:520px){.top-in{padding-block:10px 8px}.brand .eyebrow{display:none}.sp-head .btn{padding:6px 10px}}

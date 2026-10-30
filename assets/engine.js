@@ -58,12 +58,12 @@ const ICON = {
 };
 
 /* ---------- page shell ---------- */
-const VIEWS = ['plan', 'learn', 'drill', 'exam'].concat(TOOLS.map(t => t.id));
+const VIEWS = ['plan', 'learn', 'drill', 'speed', 'exam'].concat(TOOLS.map(t => t.id));
 function buildShell() {
   const b = MOD.brand || [MOD.code || 'Study', '', 'Prep'];
   if (!document.title) document.title = b.filter(Boolean).join(' ');
   const hub = MOD.hubHref && !W.STUDY_STANDALONE ? `<a class="hublink" href="${esc(MOD.hubHref)}">← All modules</a>` : '';
-  const tabs = [['plan', 'Plan'], ['learn', 'Learn'], ['drill', 'Drill'], ['exam', 'Exam<span class="wide"> mode</span>']].concat(TOOLS.map(t => [t.id, t.tabHTML || esc(t.label)]));
+  const tabs = [['plan', 'Plan'], ['learn', 'Learn'], ['drill', 'Drill'], ['speed', 'Speed<span class="wide"> test</span>'], ['exam', 'Exam<span class="wide"> mode</span>']].concat(TOOLS.map(t => [t.id, t.tabHTML || esc(t.label)]));
   document.body.insertAdjacentHTML('afterbegin', `
 <header class="top">
   <div class="wrap top-in">
@@ -264,10 +264,12 @@ const rendered = {};
 function route() {
   let v = (location.hash || '').replace('#', '');
   if (!VIEWS.includes(v)) v = 'plan';
+  if (v !== 'speed') speedPause();
   VIEWS.forEach(n => { $('#view-' + n).hidden = n !== v; });
   $$('.tabs a').forEach(a => { if (a.dataset.view === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   if (v === 'plan' || !rendered[v]) { RENDER[v](); rendered[v] = true; }
   if (v === 'drill' && !D.cur) drillNext();
+  if (v === 'speed') speedResume();
 }
 function go(v) { if (location.hash === '#' + v) route(); else location.hash = v; W.scrollTo(0, 0); }
 const CTX = { $, $$, esc, rand, shuffle, save, toast, TTS, ICON, get S() { return S; }, go };
@@ -295,7 +297,7 @@ function renderPlan() {
         <div class="stat"><div class="n mono">${p.seen ? Math.round(100 * p.right / p.seen) + '%' : '–'}</div><div class="l">drill accuracy (${p.right} of ${p.seen} questions)</div></div>
         ${toolStats.map(s => `<div class="stat"><div class="n mono">${esc(s.n)}</div><div class="l">${esc(s.l)}</div></div>`).join('')}
       </div>
-      <div class="row"><a class="btn primary" href="#learn">Start with the model answers</a>${toolBtns}</div>
+      <div class="row"><a class="btn primary" href="#learn">Start with the model answers</a><a class="btn" href="#speed">Quick speed test</a>${toolBtns}</div>
     </div>
     ${QUOTES.length ? `<div class="card">${MOD.quoteSource ? `<span class="eyebrow">${esc(MOD.quoteSource)}</span>` : ''}<ul class="quotes">${QUOTES.map(q => `<li>${esc(q)}</li>`).join('')}</ul></div>` : ''}
   </div>
@@ -483,6 +485,136 @@ document.addEventListener('keydown', e => {
   else if (D.answered && (e.key === 'Enter' || e.key === 'n') && !(tg === 'BUTTON' && e.key === 'Enter' && e.target.id !== 'drill-next')) { e.preventDefault(); drillNext(); }
 });
 
+/* ---------- SPEED TEST ---------- */
+const SP = { topic: 'all', len: 10, secs: 30, auto: true, read: false, round: null, timer: null };
+const spKey = () => `${SP.topic}|${SP.len}`;
+function speedStore() { S.speed = Object.assign({ best: {}, rounds: 0 }, S.speed || {}); return S.speed; }
+function speedClear() { if (SP.timer) { clearInterval(SP.timer); clearTimeout(SP.timer); SP.timer = null; } }
+function speedPause() { const R = SP.round; if (R && !R.done && SP.timer) { speedClear(); R.paused = R.answered ? 'next' : 'q'; } }
+function speedResume() { const R = SP.round; if (R && R.paused) { const p = R.paused; R.paused = false; if (p === 'next') speedNext(); else speedQuestion(); } }
+function renderSpeed() { const R = SP.round; if (R && R.done) speedEnd(); else if (R) speedQuestion(); else speedSetup(); }
+function speedSetup() {
+  speedClear(); SP.round = null;
+  const v = $('#view-speed'); const st = speedStore(); const best = st.best[spKey()];
+  const chip = (attr, val, cur, label) => `<button class="chip" data-${attr}="${val}" aria-pressed="${String(cur) === String(val)}">${label}</button>`;
+  const pool = DRILL.filter(d => SP.topic === 'all' || d.t === SP.topic).length;
+  v.innerHTML = `<div class="card filters">
+    <div class="row" style="justify-content:space-between"><h2>Speed test</h2><span class="muted small">${st.rounds} round${st.rounds === 1 ? '' : 's'} played</span></div>
+    <p>Quick-fire multiple choice for on the go. Tap an answer: right answers move on by themselves, wrong ones stop and explain why.</p>
+    <div><div class="eyebrow">Topic</div><div class="chips" id="sp-topics">${topicChips(SP.topic, 'data-t')}</div></div>
+    <div class="sp-opts">
+      <div><div class="eyebrow">Questions</div><div class="chips">${[10, 20, 30].map(n => chip('len', n, SP.len, n)).join('')}</div></div>
+      <div><div class="eyebrow">Time per question</div><div class="chips">${[[0, 'No timer'], [15, '15 s'], [30, '30 s']].map(([n, l]) => chip('secs', n, SP.secs, l)).join('')}</div></div>
+    </div>
+    <label class="row small"><input type="checkbox" id="sp-auto" ${SP.auto ? 'checked' : ''}> Move on by itself when I'm right</label>
+    <label class="row small"><input type="checkbox" id="sp-read" ${SP.read ? 'checked' : ''}> Read each question and its options aloud (turns the timer off)</label>
+    <div class="row"><button class="btn primary sp-start" id="sp-start" ${pool ? '' : 'disabled'}>Start ${Math.min(SP.len, pool)} questions</button><span class="small muted">${best ? `Best for this setup: ${best.score}/${best.of}` : 'No best score yet for this setup.'}</span></div>
+    <p class="small muted">Questions you got wrong before come up more often. Keys: <span class="kbd">1</span>–<span class="kbd">4</span> to answer, <span class="kbd">Enter</span> for next.</p>
+  </div>`;
+  $$('#sp-topics .chip', v).forEach(b => b.onclick = () => { SP.topic = b.dataset.t; speedSetup(); });
+  $$('[data-len]', v).forEach(b => b.onclick = () => { SP.len = +b.dataset.len; speedSetup(); });
+  $$('[data-secs]', v).forEach(b => b.onclick = () => { SP.secs = +b.dataset.secs; speedSetup(); });
+  $('#sp-auto').onchange = e => { SP.auto = e.target.checked; };
+  $('#sp-read').onchange = e => { SP.read = e.target.checked; };
+  $('#sp-start').onclick = () => speedStart();
+}
+function speedStart(ids) {
+  let pool = ids;
+  if (!pool) {
+    const w = id => { const s = S.drill[id]; return (s ? (s.last === 'w' ? 3 : 0) : 1.5) + Math.random() * 2.5; };
+    pool = shuffle(DRILL.filter(d => SP.topic === 'all' || d.t === SP.topic).map(d => [d.id, w(d.id)]).sort((a, b) => b[1] - a[1]).map(x => x[0]).slice(0, SP.len));
+  }
+  if (!pool.length) return speedSetup();
+  SP.round = { ids: pool, i: 0, res: [], retry: !!ids, key: spKey(), answered: false };
+  speedStore().rounds++; save();
+  speedQuestion();
+}
+function speedQuestion() {
+  speedClear(); TTS.stop();
+  const R = SP.round, v = $('#view-speed'), it = DRILL_BY_ID[R.ids[R.i]];
+  R.order = shuffle(it.o.map((o, i) => i)); R.answered = false; R.qt = Date.now();
+  const right = R.res.filter(x => x.ok).length, useTimer = SP.secs > 0 && !SP.read;
+  v.innerHTML = `<div class="card speed-card">
+    <div class="sp-head"><span class="mono"><b>Q ${R.i + 1}</b>/${R.ids.length}</span><span class="mono muted">${right} right · ${R.res.length - right} wrong</span><button class="btn ghost" id="sp-quit">End round</button></div>
+    <div class="meter" aria-hidden="true"><i style="width:${Math.round(100 * R.i / R.ids.length)}%"></i></div>
+    ${useTimer ? '<div class="sp-timer" aria-hidden="true"><i id="sp-tbar"></i></div>' : ''}
+    <div class="card-head">${topicChip(it.t)}</div>
+    <p class="q sp-q">${esc(it.q)}</p>
+    <div class="opts">${R.order.map((oi, k) => `<button class="opt sp-opt" data-k="${k}"><span class="k">${k + 1}</span><span>${esc(it.o[oi][0])}</span></button>`).join('')}</div>
+    <div id="sp-fb" aria-live="polite"></div>
+  </div>`;
+  $$('.sp-opt', v).forEach(b => b.onclick = () => speedAnswer(+b.dataset.k));
+  $('#sp-quit').onclick = () => { speedClear(); TTS.stop(); if (R.res.length) { R.done = true; speedEnd(); } else speedSetup(); };
+  if (SP.read) TTS.speak(`${it.q} ` + R.order.map((oi, k) => `Option ${k + 1}. ${it.o[oi][0]}.`).join(' '));
+  if (useTimer) {
+    const ms = SP.secs * 1000;
+    SP.timer = setInterval(() => {
+      const left = ms - (Date.now() - R.qt), el = $('#sp-tbar');
+      if (el) { el.style.width = Math.max(0, 100 * left / ms) + '%'; el.classList.toggle('low', left < ms * 0.3); }
+      if (left <= 0) speedAnswer(-1);
+    }, 100);
+  }
+  W.scrollTo({ top: 0 });
+}
+function speedAnswer(k) {
+  const R = SP.round; if (!R || R.answered || R.done) return;
+  R.answered = true; speedClear();
+  const it = DRILL_BY_ID[R.ids[R.i]], oi = k < 0 ? -1 : R.order[k], ok = oi === it.a;
+  R.res.push({ id: it.id, ok, picked: oi, ms: Date.now() - R.qt });
+  const st = S.drill[it.id] || { r: 0, w: 0, last: '' }; if (ok) { st.r++; st.last = 'r'; } else { st.w++; st.last = 'w'; } S.drill[it.id] = st; save();
+  $$('#view-speed .sp-opt').forEach((b, kk) => { b.disabled = true; const o = R.order[kk]; if (o === it.a) b.classList.add('right'); else if (kk === k) b.classList.add('wrong'); });
+  const right = it.o[it.a], last = R.i >= R.ids.length - 1, nextLbl = last ? 'See my score' : 'Next question';
+  const fb = $('#sp-fb');
+  if (ok) {
+    fb.innerHTML = `<div class="fb ok"><h3>Correct</h3><p>${esc(right[1])}</p>${SP.auto ? '<div class="sp-auto" aria-hidden="true"><i></i></div>' : ''}<div class="row"><button class="btn primary" id="sp-next">${nextLbl}</button></div></div>`;
+    if (S.settings.auto) TTS.speak('Correct.');
+    if (SP.auto) { const bar = $('.sp-auto i', fb); requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.width = '100%'; })); SP.timer = setTimeout(speedNext, 1700); }
+  } else {
+    const chose = oi >= 0 ? it.o[oi] : null;
+    fb.innerHTML = `<div class="fb no"><h3>${chose ? 'Not quite' : 'Time’s up'}</h3>${chose ? `<p><span class="lbl">Why “${esc(chose[0])}” is wrong:</span> ${esc(chose[1])}</p>` : ''}<p><span class="lbl">The answer:</span> ${esc(right[0])}. ${esc(right[1])}</p>${it.tip ? `<p><span class="lbl">Avoid this trap:</span> ${esc(it.tip)}</p>` : ''}<div class="row"><button class="btn primary" id="sp-next">${nextLbl}</button><button class="btn" id="sp-readfb">${ICON.play}Read explanation</button></div></div>`;
+    const speech = (chose ? `Not quite. You chose: ${chose[0]}. ${chose[1]} ` : 'Time’s up. ') + `The correct answer is: ${right[0]}. ${right[1]} ${it.tip ? 'To avoid this trap: ' + it.tip : ''}`;
+    $('#sp-readfb').onclick = () => TTS.speak(speech);
+    if (S.settings.auto) TTS.speak(speech);
+  }
+  $('#sp-next').onclick = () => speedNext();
+  $('#sp-next').focus({ preventScroll: true });
+  fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function speedNext() {
+  const R = SP.round; if (!R || !R.answered || R.done) return;
+  speedClear();
+  if (R.i >= R.ids.length - 1) { R.done = true; speedEnd(); } else { R.i++; speedQuestion(); }
+}
+function speedEnd() {
+  speedClear();
+  const R = SP.round, v = $('#view-speed'), n = R.res.length, sc = R.res.filter(x => x.ok).length;
+  const pct = n ? Math.round(100 * sc / n) : 0;
+  const avg = n ? (R.res.reduce((a, x) => a + x.ms, 0) / n / 1000).toFixed(1) : '0';
+  const st = speedStore(); let newBest = false;
+  if (!R.retry && !R.saved && n === R.ids.length) { const b = st.best[R.key]; if (!b || sc > b.score) { st.best[R.key] = { score: sc, of: n }; newBest = true; } R.saved = true; save(); }
+  const miss = R.res.filter(x => !x.ok);
+  const verdict = pct >= 90 ? 'Exam-ready on these. Try a longer round or another topic.' : pct >= 70 ? 'Solid. Clean up the misses below, then retry them.' : pct >= 50 ? 'Getting there. Read every miss below, then retry them.' : 'Go back to the Learn cards for these topics, then retry.';
+  v.innerHTML = `<div class="card speed-card">
+    <span class="eyebrow">${R.retry ? 'Retry of missed questions' : 'Round complete'}</span>
+    <div class="row" style="align-items:flex-end;gap:16px"><div class="score mono">${sc}/${n}</div><div class="muted">${pct}% · ${avg} s per question${newBest ? ' · <span class="ok-t">new best</span>' : ''}</div></div>
+    <p>${esc(verdict)}</p>
+    <div class="row">${miss.length ? `<button class="btn primary" id="sp-retry">Retry the ${miss.length} I missed</button>` : ''}<button class="btn${miss.length ? '' : ' primary'}" id="sp-again">New round</button><button class="btn ghost" id="sp-setup">Change settings</button><button class="btn ghost" id="sp-readsum">${ICON.play}Read summary</button></div>
+  </div>
+  ${miss.length ? `<div class="card"><h3>What you missed</h3><ol class="pts sp-miss">${miss.map(x => { const it = DRILL_BY_ID[x.id], r = it.o[it.a], c = x.picked >= 0 ? it.o[x.picked] : null; return `<li><b>${esc(it.q)}</b><span>${c ? `<span class="no-t">You:</span> ${esc(c[0])}. ${esc(c[1])}` : '<span class="no-t">Ran out of time.</span>'}</span><span><span class="ok-t">Answer:</span> ${esc(r[0])}. ${esc(r[1])}</span></li>`; }).join('')}</ol></div>` : ''}`;
+  const retry = $('#sp-retry'); if (retry) retry.onclick = () => speedStart(shuffle(miss.map(x => x.id)));
+  $('#sp-again').onclick = () => speedStart();
+  $('#sp-setup').onclick = () => speedSetup();
+  $('#sp-readsum').onclick = () => TTS.speak(`You scored ${sc} out of ${n}. ${verdict} ` + miss.map(x => { const it = DRILL_BY_ID[x.id]; return `${it.q} The answer is: ${it.o[it.a][0]}.`; }).join(' '));
+  W.scrollTo({ top: 0 });
+}
+document.addEventListener('keydown', e => {
+  const sv = $('#view-speed'); const R = SP.round;
+  if (!sv || sv.hidden || !R || R.done) return;
+  const tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+  if (!R.answered && /^[1-4]$/.test(e.key) && +e.key - 1 < R.order.length) { e.preventDefault(); speedAnswer(+e.key - 1); }
+  else if (R.answered && (e.key === 'Enter' || e.key === 'n') && !(tg === 'BUTTON' && e.key === 'Enter' && e.target.id !== 'sp-next')) { e.preventDefault(); speedNext(); }
+});
+
 /* ---------- EXAM ---------- */
 const E = { set: PREDICTED.length ? 'predicted' : 'all', id: null, timer: { on: false, start: 0, acc: 0, h: null }, ctl: null };
 function examList() {
@@ -592,7 +724,7 @@ async function examMark(it, marks) {
   finally { if (E.ctl === ctl) E.ctl = null; const b = $('#exam-mark'); if (b) b.disabled = false; }
 }
 
-const RENDER = { plan: renderPlan, learn: renderLearn, drill: renderDrill, exam: renderExam };
+const RENDER = { plan: renderPlan, learn: renderLearn, drill: renderDrill, speed: renderSpeed, exam: renderExam };
 TOOLS.forEach(t => { RENDER[t.id] = () => t.render($('#view-' + t.id), CTX); });
 
 /* ---------- boot ---------- */
