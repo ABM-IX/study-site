@@ -42,6 +42,7 @@ const PRESETS = [
   { id: 'p2025', label: '2025 test (172.18.0.0/16)', base: '172.18.0.0', p: 16, reqs: [['Dept A', 300], ['Dept B', 120], ['Dept C', 50], ['Dept D', 12]] },
   { id: 'p2026', label: '2026 test (bank, /24)', base: '172.20.0.0', p: 24, reqs: [['Branch A', 100], ['Branch B', 50], ['Branch C', 20], ['Branch D', 8], ['Branch E', 2]] },
   { id: 'p2022', label: '2022 test / 2017 supp (192.168.1.0/24)', base: '192.168.1.0', p: 24, reqs: [['Net 1', 110], ['Net 2', 50], ['Net 3', 14], ['Net 4', 12], ['Net 5', 6]] },
+  { id: 'pt', label: 'Practical: Packet Tracer (172.16.23.0/24)', base: '172.16.23.0', p: 24, reqs: [['Marketing/Sales', 62], ['Finance', 28], ['Executive', 14], ['ICT', 6], ['R1–R2 link', 2]] },
   { id: 'prev', label: 'Revision paper (192.168.170.0)', base: '192.168.170.0', p: 24, reqs: [['Sales', 85], ['Accounts', 20], ['Marketing', 5]] }
 ];
 const SN = { mode: 'final', prob: null, checked: false, shown: false };

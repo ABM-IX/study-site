@@ -153,7 +153,7 @@ var LEARN = [
     "Conversion rule::A global group can't be changed directly to domain local; it must go through universal.",
     "Steps::In Active Directory Users and Computers, right-click the group → Properties → General tab → Group scope: Universal → Apply; then select Domain local → OK."
   ],
-  tip:"Memory hook: Global gathers users; Domain local grants permissions. Scope (domain local, global, universal) is different from type (security, distribution)." },
+  tip:"Memory hook: Global gathers users; Domain local grants permissions. Scope (domain local, global, universal) is different from type (security, distribution). Watch out: the 82-question study notes say you can pick Domain local directly. You can’t; Windows only allows global → universal → domain local." },
 
 { id:"ws-mmc", t:"ws", tier:3, marks:4,
   q:"Your boss wants you to create, manage and distribute Microsoft Management Console (MMC) consoles. Write the command to create an MMC [1], explain its advantage [1–2], and give the first two steps to add Active Directory Users and Computers to a new empty MMC [2].",
@@ -207,7 +207,8 @@ var LEARN = [
   pts:[
     "Network Administrator::Configures and maintains routers, switches, firewalls, Wi-Fi and VPNs; monitors network performance and troubleshoots connectivity (IP addressing, VLANs).",
     "Database Administrator::Installs and maintains the DBMS and schedules database backups and recovery; tunes performance and controls who can access which data (integrity and security).",
-    "System Administrator::Installs, configures and patches servers and operating systems; manages user accounts, groups and permissions (AD) and runs backups and restores."
+    "System Administrator::Installs, configures and patches servers and operating systems; manages user accounts, groups and permissions (AD) and runs backups and restores.",
+    "Security Administrator (if asked)::Writes security policy, manages firewalls and IDS/IPS, runs vulnerability assessments and leads incident response."
   ],
   tip:"Two separate responsibilities per role, each starting with a verb." },
 
@@ -284,7 +285,7 @@ var LEARN = [
     "Interoperability::Based on the IEEE 802.3 standard, so equipment from different vendors works together.",
     "Versatility and continuous evolution::Runs over copper or fibre, carries voice, video and data, and now extends to MANs and WANs."
   ],
-  tip:"6 marks for 3 factors means 2 marks each: name the factor and explain why it made organisations choose Ethernet. In the 2025 scenario, link each factor back to “reliable and cost-effective”." },
+  tip:"6 marks for 3 factors means 2 marks each: name the factor and explain why it made organisations choose Ethernet. In the 2025 scenario, link each factor back to “reliable and cost-effective”. The 82-question study notes use a different list (backward compatibility, ecosystem); use the slide’s list for this lecturer." },
 
 { id:"eth-mac", t:"eth", tier:2, marks:5,
   q:"Explain the difference between deterministic and non-deterministic media access control (MAC) methods. Provide one example of each.",
@@ -368,7 +369,7 @@ var LEARN = [
     "PMD: Physical Medium Dependent::Maps the physical medium to the PCS: converts the serial bits into light pulses on fibre (1000BASE-SX/LX) or electrical impulses on copper, and defines the signalling for each medium.",
     "Why PMD is needed::Each medium (multimode fibre, single-mode fibre, copper) needs different signalling. Keeping that in one sublayer makes everything above it media independent."
   ],
-  tip:"“Justify” means say why each one is needed, not only what it does. Going down the stack: Code → Serialise → Signal (PCS → PMA → PMD). Your lecturer: “Go again for the description of all of this. You will get your two marks for each.”" },
+  tip:"“Justify” means say why each one is needed, not only what it does. Going down the stack: Code → Serialise → Signal (PCS → PMA → PMD). Your lecturer: “Go again for the description of all of this. You will get your two marks for each.” The 82-question study notes add scrambling and auto-negotiation to the PCS; stick to the slide (8B/10B, DC balance, error detection, synchronisation, clock recovery)." },
 
 { id:"gbe-media", t:"gbe", tier:1, marks:9,
   q:"Gigabit Ethernet (IEEE 802.3z) has three media connectivity options: 1000BASE-SX, 1000BASE-LX and 1000BASE-CX. Describe each (medium, distance, usage) and the setup where each is most suitable.",
@@ -420,7 +421,7 @@ var LEARN = [
     "Solution: mode conditioning patch cable::Fit one between the LX transceiver and the multimode cable plant.",
     "How it fixes it::It offsets the laser launch away from the centre of the core (a “conditioned launch”), so the light isn't concentrated in the centre and the modes behave consistently, minimising DMD."
   ],
-  tip:"For the 4-mark scenario: name the solution, say where it goes, and explain how it stops DMD. Your lecturer: “refer to the differential mode delay… solved through the mode conditioning patch cable… to offset data from running through the centre.”" },
+  tip:"For the 4-mark scenario: name the solution, say where it goes, and explain how it stops DMD. Your lecturer: “refer to the differential mode delay… solved through the mode conditioning patch cable… to offset data from running through the centre.” Watch out: the 82-question study notes say VCSEL lasers and better fibre fixed DMD. Your slides and lecturer say mode conditioning patch cable, so write that." },
 
 { id:"gbe-lasers", t:"gbe", tier:2, marks:4,
   q:"What are the two key differences between long-wave and short-wave laser technologies in fibre-optic Ethernet?",
@@ -1152,5 +1153,142 @@ var LEARN = [
     "Health checks::Send traffic only to servers that are up and performing well.",
     "Algorithms and monitoring::Round-robin, least connections or IP hash; monitor traffic patterns and tune the configuration for peak times."
   ],
-  tip:"" }
+  tip:"" },
+/* ---------------- Added from the study notes (practicals and gaps) ---------------- */
+{ id:"ws-gpo", t:"ws", tier:2, marks:5, est:true, steps:true,
+  q:"Create a Group Policy Object that stops users in the PulaUsers OU from opening Control Panel, and link it to that OU.",
+  seen:["Study notes (practical)"],
+  pts:[
+    "Open Group Policy Management::Server Manager → Tools → Group Policy Management (or Run → gpmc.msc).",
+    "Create the GPO::Expand Forest → Domains → your domain, right-click Group Policy Objects → New, name it (for example “Restrict Control Panel”) → OK.",
+    "Edit the setting::Right-click the GPO → Edit → User Configuration → Policies → Administrative Templates → Control Panel → double-click “Prohibit access to Control Panel and PC settings” → Enabled → OK.",
+    "Link it to the OU::Right-click the PulaUsers OU → Link an Existing GPO → select the GPO → OK. (Or right-click the OU → “Create a GPO in this domain, and Link it here”.)",
+    "Apply and check::On a client run gpupdate /force (or sign out and back in), then gpresult /r to confirm the GPO applied."
+  ],
+  tip:"A GPO does nothing until it's linked to a site, domain or OU. User Configuration settings apply to user accounts in the OU; Computer Configuration to computer accounts." },
+{ id:"ws-backup", t:"ws", tier:2, marks:6, est:true, lect:true, steps:true,
+  q:"Explain how you would back up a Windows Server 2019 server with Windows Server Backup, and the good practice that makes backups reliable.",
+  seen:["Revision session: “backing up, upgrading, patching”","Study notes (practical)"],
+  pts:[
+    "Install the feature::Server Manager → Manage → Add Roles and Features → Features page → tick Windows Server Backup → Install.",
+    "Run a backup::Tools → Windows Server Backup → Local Backup → Backup Once (or Backup Schedule) → Full server (all volumes, system state and applications) or Custom.",
+    "Choose a destination::A dedicated backup disk, an external USB drive or a remote network share; never the same disk you're backing up.",
+    "Schedule it::Backup Schedule → choose daily times outside working hours (for example 10 pm) so backups run automatically.",
+    "Verify::Check the last backup shows Completed, and test a restore regularly. A backup that has never been restored is unproven.",
+    "3-2-1 rule::Keep 3 copies of the data, on 2 different types of media, with 1 copy off-site, so a fire, theft or ransomware can't destroy every copy."
+  ],
+  tip:"Link it to management: always take a backup before patching or upgrading, so you can roll back if the change breaks something." },
+{ id:"ws-perfmon", t:"ws", tier:2, marks:6, est:true, lect:true,
+  q:"A server is running slowly. How would you monitor its performance in Windows Server to find the bottleneck?",
+  seen:["Revision session: “if there are problems, how do we handle that?”","Study notes (practical)"],
+  pts:[
+    "Task Manager::Ctrl+Shift+Esc → Performance and Processes tabs: a quick view of CPU, memory, disk and network use, and which process is using them.",
+    "Resource Monitor::Task Manager → Performance → Open Resource Monitor (or run resmon). Per-process detail for CPU, memory, disk and network, such as which process is hammering the disk.",
+    "Performance Monitor::Run perfmon and add counters to watch live, for example Processor % Processor Time, Memory Available MBytes, PhysicalDisk Avg. Disk Queue Length.",
+    "Data Collector Set::Performance Monitor → Data Collector Sets → User Defined → New → Data Collector Set → Create manually → Performance counter → add counters and a sample interval → Start. Stop it later and open the log to analyse trends.",
+    "Read the counters::CPU above about 80% sustained, available memory below about 10%, or a disk queue above about 2 per disk points to that component as the bottleneck.",
+    "Compare with the baseline::Record normal performance first so abnormal stands out, then fix (add RAM, move workloads, stop the heavy process) and document what you did."
+  ],
+  tip:"" },
+{ id:"ws-hyperv", t:"ws", tier:2, marks:5, est:true, steps:true,
+  q:"Describe how to create a virtual machine with Hyper-V on Windows Server, including the types of virtual switch.",
+  seen:["Study notes (practical)","Scenario revision (Hyper-V migration)"],
+  pts:[
+    "Install Hyper-V::Server Manager → Add Roles and Features → Hyper-V (the server restarts). Hyper-V is a Type 1 hypervisor.",
+    "Create a virtual switch::Hyper-V Manager → Virtual Switch Manager → New virtual network switch → choose External, Internal or Private.",
+    "Start the wizard::Hyper-V Manager → Action → New → Virtual Machine → name and location → generation.",
+    "Assign resources::Startup memory (for example 2048 MB, optionally Dynamic Memory), and connect the network adapter to the virtual switch.",
+    "Disk and OS::Create a virtual hard disk (VHDX) → install the OS from an ISO image → Finish → Start and Connect.",
+    "Switch types::External: VMs reach the physical network through the host's NIC. Internal: VMs and the host only. Private: VMs on that host only, not even the host."
+  ],
+  tip:"" },
+{ id:"ws-firewall", t:"ws", tier:3, marks:4, est:true, steps:true,
+  q:"Configure Windows Defender Firewall on a server so web traffic (HTTP and HTTPS) is allowed in, while other inbound traffic stays blocked.",
+  seen:["Study notes (practical)"],
+  pts:[
+    "Open the console::Run wf.msc (Windows Defender Firewall with Advanced Security).",
+    "Check the default::Firewall Properties → Domain, Private and Public profiles: Inbound connections = Block.",
+    "New inbound rule::Inbound Rules → New Rule → Port → TCP → Specific local ports: 80, 443 → Allow the connection → choose profiles → name it “Allow Web” → Finish.",
+    "Test::Browse to the server's site from a client. Everything not explicitly allowed is still blocked."
+  ],
+  tip:"Firewall logic in one line: block by default, allow only what's needed." },
+{ id:"ip-commands", t:"ip", tier:2, marks:6, est:true, lect:true,
+  q:"Name and explain the commands an administrator uses to troubleshoot network connectivity on Windows.",
+  seen:["Revision session: “if there are problems, how do we handle that?”","Study notes"],
+  pts:[
+    "ipconfig /all::Shows the IP address, mask, gateway, DNS servers and MAC. A 169.254.x.x address means DHCP failed.",
+    "ipconfig /release and /renew::Gives up the DHCP lease and asks for a new one.",
+    "ipconfig /flushdns::Clears the DNS resolver cache when stale name records are suspected.",
+    "ping::Tests whether a host is reachable and shows round-trip time (ICMP echo request/reply). Ping the gateway, then the DNS server, then an outside host to see where it fails.",
+    "tracert::Lists every router hop to a destination, showing where packets stop or slow down.",
+    "nslookup::Queries DNS directly to check a name resolves to the right IP.",
+    "netstat -an and arp -a::netstat lists active connections and listening ports; arp -a shows the IP-to-MAC cache for the local segment."
+  ],
+  tip:"Explain them in troubleshooting order: ipconfig (my settings) → ping (reachability) → tracert (where it breaks) → nslookup (names)." },
+{ id:"ip-pt", t:"ip", tier:2, marks:10, est:true, steps:true,
+  q:"Practical (Packet Tracer): 172.16.23.0/24 for Marketing/Sales 62 hosts, Finance 28, Executive 14 and ICT 6, across two routers. Plan the subnets, then explain how hosts on Router 2's LANs get addresses from the DHCP server on Router 1.",
+  seen:["Study notes (practical)"],
+  pts:[
+    "Subnet plan::Marketing 62 → /26: 172.16.23.0 – .63 (gateway .1). Finance 28 → /27: .64 – .95. Executive 14 → /28: .96 – .111. ICT 6 → /29: .112 – .119. Router-to-router link → /30: .120 – .123 (R1 .121, R2 .122).",
+    "DHCP pools on Router 1::ip dhcp excluded-address 172.16.23.1 (keeps the gateway out of the pool), then ip dhcp pool MARKETING → network 172.16.23.0 255.255.255.192 → default-router 172.16.23.1 → dns-server … One pool per LAN.",
+    "Interface addresses::Give each router LAN interface the first usable address of its subnet (for example on R1 G0/0: ip address 172.16.23.1 255.255.255.192, then no shutdown).",
+    "Static routes::Each router needs routes to the other router's LANs, for example on R1: ip route 172.16.23.96 255.255.255.240 172.16.23.122.",
+    "DHCP relay with ip helper-address::DHCP Discover is a broadcast, and routers don't forward broadcasts. On Router 2's LAN interfaces: ip helper-address 172.16.23.121, so requests are forwarded to Router 1's DHCP server as unicast.",
+    "Clients::Set each PC to DHCP and check with ipconfig that it got an address, mask, gateway and DNS from the right pool."
+  ],
+  tip:"Practise the subnet part in the Subnet lab: Past papers → “Practical: Packet Tracer”." },
+{ id:"eth-addr", t:"eth", tier:3, marks:4,
+  q:"Describe the Ethernet (MAC) addressing scheme and the three types of address.",
+  seen:["Study notes","2026 slides"],
+  pts:[
+    "Format::48 bits written as 12 hexadecimal digits (for example 00-1A-2B-3C-4D-5E), burned into the NIC's ROM (burned-in address) and copied to RAM when the NIC starts.",
+    "OUI and device ID::The first 24 bits are the manufacturer's Organizationally Unique Identifier; the last 24 are assigned by the vendor to make each card unique.",
+    "Unicast::Sent to one specific NIC.",
+    "Multicast::Sent to a group of devices that have joined the group.",
+    "Broadcast::FF-FF-FF-FF-FF-FF: every device on the local segment receives it (for example ARP requests, DHCP Discover)."
+  ],
+  tip:"" },
+{ id:"wifi-topo", t:"wifi", tier:3, marks:6,
+  q:"Describe the 802.11 topologies: ad hoc (IBSS), infrastructure BSS and ESS.",
+  seen:["Study notes","2026 slides"],
+  pts:[
+    "Ad hoc (IBSS)::Independent Basic Service Set: clients connect peer-to-peer with no access point, for quick temporary networks. Tethering (a phone sharing mobile data as a hotspot) is a variation.",
+    "Infrastructure mode (BSS)::Basic Service Set: one AP interconnects its associated clients and links them to the wired network; identified by the BSSID (the AP's MAC). Clients in different BSSs can't communicate directly.",
+    "ESS::Extended Service Set: two or more BSSs (APs sharing one SSID) joined by a wired distribution system, so clients roam between APs and communicate across the ESS."
+  ],
+  tip:"" },
+{ id:"wifi-pcf", t:"wifi", tier:3, marks:8,
+  q:"(Insurance: 2014 final.) The 802.11 MAC defines the Distributed Coordination Function (DCF) and an optional Point Coordination Function (PCF). Justify the need for PCF and describe how it works.",
+  seen:["2014 final","Study notes"],
+  pts:[
+    "DCF::The normal, contention-based method: CSMA/CA, with stations competing for the medium using random backoff. No guaranteed access time.",
+    "Why PCF::Time-sensitive traffic (voice, video) needs guaranteed, predictable access. PCF gives contention-free, deterministic access so no station starves.",
+    "Taking the medium::The AP acts as Point Coordinator. It waits only PIFS (shorter than DIFS), so it gets the medium ahead of DCF stations and starts a Contention-Free Period.",
+    "Polling::During the contention-free period the AP polls each station on its polling list in turn; a station sends only when polled.",
+    "Alternating::A CF-End frame ends the contention-free period and normal DCF contention resumes; the two periods alternate.",
+    "Why optional::It's complex and rarely implemented by APs; later replaced by 802.11e QoS (EDCA, HCCA)."
+  ],
+  tip:"" },
+{ id:"cl-vsvirt", t:"cloud", tier:2, marks:4, est:true,
+  q:"What is the difference between virtualisation and cloud computing?",
+  seen:["2026 slides","Study notes"],
+  pts:[
+    "Virtualisation::A technology: a hypervisor separates the OS from the hardware so one physical machine runs many virtual machines.",
+    "Cloud computing::A service model: on-demand access over a network to a shared pool of resources, with self-service, rapid elasticity and pay-per-use.",
+    "How they relate::Virtualisation is the foundation of cloud computing. Clouds run on virtualised data centres, but you can virtualise in your own server room without having a cloud.",
+    "Who manages it::With virtualisation your admins manage the VMs; with cloud, users self-provision and the provider manages the infrastructure underneath."
+  ],
+  tip:"The slide says it directly: the terms are often used interchangeably, but they mean different things, and virtualisation is the foundation of cloud computing." },
+{ id:"cl-sdn-arch", t:"cloud", tier:2, marks:6, est:true,
+  q:"Explain the SDN architecture (control plane, data plane, northbound and southbound APIs) and the challenges of adopting SDN.",
+  seen:["Study notes","Scenario revision"],
+  pts:[
+    "Control plane vs data plane::A traditional device holds both the brain (control plane: deciding paths) and the muscle (data plane: forwarding). SDN moves the control plane into a central controller; devices keep only the data plane.",
+    "Southbound APIs::Protocols the controller uses to program the switches, for example OpenFlow or NETCONF.",
+    "Northbound APIs::Interfaces (such as REST) that let applications and admins tell the controller what they want: policies and automation.",
+    "Challenge: single point of failure::If the controller fails, the network can't change, so it needs clustering; it's also a high-value target for attackers.",
+    "Challenge: migration and skills::Moving from a traditional network is complex (hybrid for a while), and staff need programming and automation skills.",
+    "Examples::OpenDaylight and ONOS (open source), Cisco ACI, VMware NSX; cloud networks such as AWS VPC and Azure Virtual Network are software-defined."
+  ],
+  tip:"If the question is just “what is SDN”, lead with the slide's simple version (one controller as the brain, devices just forward), then add these terms for extra marks." }
 ];

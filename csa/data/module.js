@@ -59,6 +59,8 @@ var HITLIST = [
   { tier:2, t:"gbe",  name:"Full duplex, same frame format, reasons to switch, GBIC", ev:"6 papers", go:"gbe-duplex" },
   { tier:2, t:"eth",  name:"Why Ethernet succeeded, deterministic vs non-deterministic, IFS and backoff", ev:"2024–2026 tests", go:"eth-success" },
   { tier:2, t:"admin",name:"Sysadmin scenarios: one-person model, documentation, DBA vs security", ev:"2025 + 2026 tests", go:"ad-oneperson" },
+  { tier:2, t:"ws",   name:"Windows Server management: Group Policy, backup, Performance Monitor, Hyper-V, firewall", ev:"Practicals · “backing up… if there are problems, how do we handle that?”", go:"ws-backup" },
+  { tier:2, t:"ip",   name:"Troubleshooting commands and the Packet Tracer DHCP practical", ev:"Study notes · practicals", go:"ip-commands" },
   { tier:3, t:"wifi", name:"Roaming, station services, FHSS / DSSS, WEP", ev:"2014–2022 papers", go:"wifi-roaming" },
   { tier:3, t:"ip",   name:"TCP / UDP / ICMP / ARP, DHCP DORA", ev:"4 papers", go:"ip-protocols" },
   { tier:3, t:"ws",   name:"Group scopes, delegation, MMC, AD terms, file shares", ev:"Older papers", go:"ws-scopes" }
