@@ -25,11 +25,17 @@ study-site/
 │       ├── module.js     settings, topics, hit list, predicted paper, plan, rules, quotes
 │       ├── learn.js      model answers (Learn + Exam mode)
 │       └── drill.js      multiple-choice questions
+├── is/                   CSE301 Intelligent Systems module
+│   └── index.html        one self-contained file, built with the Study Hub engine (Quest, Calc lab, Chaining lab)
 ├── _template/            copy this to start a new module
 ├── scripts/bundle.mjs    makes a single-file version of a module
 ├── NEW-MODULE.md         how to build the next module (with a prompt for Claude)
 └── .nojekyll             tells GitHub Pages to serve files as they are
 ```
+
+## CSE301 Intelligent Systems
+
+`is/index.html` is built from the Study Hub project (`Study Hub/imports/is-final-prep`, `node build.mjs`), so edit it there and copy the new build here. It opens on **Quest**: the lecturer's ten scope topics as missions, each with four steps (know it, drill it, calculate it, write it), XP and levels, 15-minute focus sprints and one **Go** button that always picks the next step. Progress is saved in the browser, per device.
 
 ## Run it on your computer
 
